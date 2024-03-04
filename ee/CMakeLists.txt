@@ -1,6 +1,6 @@
 
 add_library(ee EXCLUDE_FROM_ALL)
-target_sources(
+target_sources(ee
 		PUBLIC
 			ee.h
 		PRIVATE
