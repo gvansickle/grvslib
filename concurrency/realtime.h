@@ -26,32 +26,4 @@
 
 
 
-template <typename PayloadType>
-class lock_free_atomic_data_transfer
-{
-public:
-
-	void update_and_clear_if_set(PayloadType* reader_payload)
-	{
-		if(m_has_been_updated.test())
-		{
-			///...@todo
-		}
-	}
-
-	void set()
-	{
-		///...@todo
-		m_has_been_updated.test_and_set();
-	}
-private:
-	/**
-	 * The flag which will communicate whether the payload has be updated or not.
-	 * @note The "= ATOMIC_FLAG_INIT" is not needed post-C++20, but we keep it here in the interest of
-	 *       minimal-pain backward compatibility.
-	 */
-	std::atomic_flag m_has_been_updated = ATOMIC_FLAG_INIT;
-};
-
-
 #endif //GRVSLIB_REALTIME_H
