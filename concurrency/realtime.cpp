@@ -15,8 +15,4 @@
  * grvslib.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//
-// Created by gary on 3/4/24.
-//
-
 #include "realtime.h"
