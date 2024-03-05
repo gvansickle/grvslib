@@ -24,6 +24,8 @@
 
 #include <atomic>
 
+
+
 template <typename PayloadType>
 class lock_free_atomic_data_transfer
 {
