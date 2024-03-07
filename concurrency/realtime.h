@@ -35,12 +35,19 @@ public:
 		if(m_has_been_updated.test())
 		{
 			// The payload has been updated.  Let's read the value.
-			while(m_is_being_accessed.test_and_set())
+
+			// First get the Payload lock using the "test and test-and-set" protocol.
+//			do
+//			{
+//				while(m_is_being_accessed.test())
+//				{
+//					// Spin.
+//				}
+//			} while(m_is_being_accessed.test_and_set());
+			if(m_is_being_accessed.test_and_set() == true)
 			{
-				while(m_is_being_accessed.test())
-				{
-					// Spin.
-				}
+				// It was locked, skip this attempt and try again on the next call.
+				return false;
 			}
 			// We've got the m_is_being_accessed lock here.
 
