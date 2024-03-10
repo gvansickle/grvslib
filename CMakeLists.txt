@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.27)
 project(grvslib CXX)
 
-if((${CMAKE_CXX_COMPILER_ID} STREQUAL Clang) AND (${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 14))
-	message("Clang version < 14 can't compile gtest at std > 14")
+if((${CMAKE_CXX_COMPILER_ID} STREQUAL Clang) AND (${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS_EQUAL 14))
+	message("Clang version <= 14 can't compile gtest at std > 14")
 	set(CMAKE_CXX_STANDARD 14)
 else ()
 	set(CMAKE_CXX_STANDARD 23)
