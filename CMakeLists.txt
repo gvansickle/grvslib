@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.27)
 project(grvslib)
 
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(ee)
 add_subdirectory(concurrency)
@@ -15,3 +16,12 @@ target_include_directories(grvslib
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 		$<INSTALL_INTERFACE:grvslib>
 )
+
+### Install Section
+### @todo
+
+### Testing section
+### @todo
+
+### Packaging section
+### @todo
