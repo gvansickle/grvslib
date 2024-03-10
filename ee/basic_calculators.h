@@ -39,6 +39,14 @@ constexpr auto fc(T r, T c)
 	return (1.0 / (2.0 * 3.1415 * r * c));
 }
 
+/**
+ * Calculates the resistance of two resistors in parallel.
+ *
+ * @tparam T  The value type of the parameters.
+ * @param r1  The value of resistance 1, in ohms.
+ * @param r2  The value of resistance 2, in ohms.
+ * @return    The calculated resistance of two resistors in parallel, in ohms.
+ */
 template<typename T>
 constexpr auto rpar(T r1, T r2)
 {
