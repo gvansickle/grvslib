@@ -23,6 +23,8 @@
 #ifndef GRVSLIB_BASIC_CALCULATORS_H
 #define GRVSLIB_BASIC_CALCULATORS_H
 
+#include <cmath>
+
 /**
  * Calculates the cutoff frequency of an RC section.
  *
@@ -52,7 +54,7 @@ constexpr auto rdiv_to_gain(T rtop, T rbot)
 template<typename T>
 constexpr auto rdiv_to_gaindb(T rtop, T rbot)
 {
-	return 20.0 * log10(rdiv_to_gain(rtop, rbot));
+	return 20.0 * std::log10(rdiv_to_gain(rtop, rbot));
 }
 
 #endif //GRVSLIB_BASIC_CALCULATORS_H
