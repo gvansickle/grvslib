@@ -23,6 +23,11 @@
 
 #include <ee/basic_calculators.h>
 
+TEST(EE_BasicCalculators, fc1)
+{
+	EXPECT_NEAR(15915.9637, fc(10'000.0, 1.0e-9), 0.0001);
+}
+
 TEST(EE_BasicCalculators, rpar1) {
 	EXPECT_DOUBLE_EQ(5000.0, rpar(10'000.0, 10'000.0));
 }
@@ -31,3 +36,9 @@ TEST(EE_BasicCalculators, rdiv_to_gain1)
 {
 	EXPECT_FLOAT_EQ(0.5f, rdiv_to_gain(20'000.0f, 20'000.0f));
 }
+
+TEST(EE_BasicCalculators, rdiv_to_gaindb1)
+{
+	EXPECT_FLOAT_EQ(-6.0206f, rdiv_to_gaindb(20'000.0f, 20'000.0f));
+}
+
