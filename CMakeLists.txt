@@ -15,3 +15,13 @@ target_include_directories(grvslib
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 		$<INSTALL_INTERFACE:grvslib>
 )
+
+### Install Section
+### @todo
+
+### Testing section
+### @todo
+
+### Packaging section
+### @todo
+

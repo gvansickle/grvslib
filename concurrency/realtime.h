@@ -34,7 +34,7 @@ public:
 	{
 		if(m_has_been_updated.test())
 		{
-			// The payload has been updated.  Let's read the value.
+			// The payload has been updated.  Let's try to read the value.
 
 			// First get the Payload lock using the "test and test-and-set" protocol.
 //			do
@@ -49,8 +49,10 @@ public:
 				// It was locked, skip this attempt and try again on the next call.
 				return false;
 			}
+
 			// We've got the m_is_being_accessed lock here.
 
+			// Copy the payload out.
 			*reader_payload = m_payload;
 
 			// Clear the update notification flag.
