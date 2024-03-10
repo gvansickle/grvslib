@@ -13,7 +13,6 @@ add_subdirectory(ee)
 add_subdirectory(concurrency)
 
 add_library(grvslib STATIC)
-
 target_link_libraries(grvslib
 	PRIVATE
 		ee

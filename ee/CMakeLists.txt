@@ -1,5 +1,5 @@
 
-add_library(ee EXCLUDE_FROM_ALL)
+add_library(ee STATIC EXCLUDE_FROM_ALL)
 target_sources(ee
 	PUBLIC
 		ee.h
