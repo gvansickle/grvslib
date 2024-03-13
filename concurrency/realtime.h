@@ -30,7 +30,7 @@ class lock_free_atomic_data_transfer
 {
 public:
 
-	bool update_and_clear_if_set(PayloadType* reader_payload)
+	bool load_and_clear_if_set(PayloadType* reader_payload)
 	{
 		if(m_has_been_updated.test())
 		{
@@ -69,7 +69,7 @@ public:
 		return false;
 	}
 
-	void set(const PayloadType* new_writer_payload)
+	void store_and_set(const PayloadType* new_writer_payload)
 	{
 		// Wait until the payload lock is false.
 		m_is_being_accessed.wait(true);
