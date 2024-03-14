@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2016, 2024 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of grvslib.
  *
@@ -22,6 +22,7 @@
 
 // Std C++
 #include <atomic>
+#include <mutex>
 
 /**
  * Function template implementing a double-checked lock.
@@ -64,7 +65,7 @@ ReturnType DoubleCheckedLock(AtomicTypeWrapper &wrap, MutexType &mutex, CacheFil
 /**
  * Function template implementing a double-checked lock protecting multiple subsets of objects.
  *
- * @param wrap          An instance of std::atomic<BitmaskType>.
+ * @param wrap          An instance of std::atomic\<BitmaskType\>.
  * @param bits          The bits which need to be set in @p wrap to indicate there's no need to call @p cache_filler.
  * @param mutex         Reference to a mutex to be std::unique_lock'ed if @p cache_filler needs to be called.
  * @param cache_filler  Function object which fills the cache.  Must return the bits to be set in @p wrap, which must
