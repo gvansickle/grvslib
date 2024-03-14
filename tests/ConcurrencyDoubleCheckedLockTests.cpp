@@ -47,7 +47,7 @@ TEST(Concurrency, DoubleCheckedLock_Basic)
 			return 55;
 		});
 
-		// Whether this thread had to do the "filling" of th_atomic_value or not, we should have gotten the
+		// Whether this thread had to do the "filling" of the_atomic_value or not, we should have gotten the
 		// correct (non-the_null_value) value either way.
 		EXPECT_EQ(55, retval);
 		EXPECT_EQ(55, the_atomic_value);
@@ -69,3 +69,4 @@ TEST(Concurrency, DoubleCheckedLock_Basic)
 	// Only one thread should have had to run its "cache filler" function.
 	EXPECT_EQ(1, num_fillers_run);
 }
+

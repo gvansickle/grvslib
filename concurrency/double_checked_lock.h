@@ -18,7 +18,7 @@
 #ifndef GRVSLIB_DOUBLE_CHECKED_LOCK_H
 #define GRVSLIB_DOUBLE_CHECKED_LOCK_H
 
-/** @file Double-checked lock implementations. */
+/** @file Double-checked lock implementation. */
 
 // Std C++
 #include <atomic>
@@ -26,34 +26,43 @@
 
 /**
  * Function template implementing a double-checked lock.
+ * A primary use case for this is in the creation of singletons, in their get_instance() function.  It makes the
+ * hot "singleton-is-already-constructed" path lock-free.  For example:
  *
- * @param wrap          An instance of std::atomic\<ReturnType\>.
- * @param mutex
- * @param cache_filler
- * @return
- */
-
-/**
- * Function template implementing a double-checked lock.
- * A primary use case for this is in the creation of singletons, in their get_instance() function.
+ * @code{.cpp}
+ * std::atomic<Singleton*> f_the_singleton_instance {nullptr};
+ * std::mutex f_the_singleton_creation_mutex {};
+ * Singleton* Singleton::get_instance()
+ * {
+ *    return DoubleCheckedLock<Singleton*, nullptr>(f_the_singleton_instance, f_the_singleton_creation_mutex,
+ *    													[&](){ return new Singleton(); });
+ * }
+ * @endcode
+ *
+ * @note I apologize for the completely unintuitive parameter names here.  I'll address this some day.
  *
  * @tparam ReturnType
- * @tparam NullVal
+ * @tparam NullVal             The value which @p wrap will have before it is initialized.  E.g., this should
+ *                             be @a nullptr for any pointer type.
  * @tparam AtomicTypeWrapper
  *
- * @param wrap          An instance of std::atomic\<ReturnType\>.  This is where the
- * @param mutex
- * @param cache_filler
+ * @param wrap          Non-const reference to an instance of std::atomic\<ReturnType\>.  This is where the pointer/value
+ *                      we're one-time initializing lives.
+ * @param mutex         Non-const reference to a mutex.  This is the same mutex we'd otherwise be locking to access and
+ * 						update @p wrap.
+ * @param cache_filler  A callable which fills the "cache", i.e., @p wrap.  This callable will be called exactly once
+ *                      during the program run to populate @p wrap; subsequent calls will simply return @p wrap.
  */
 template<typename ReturnType,
 		ReturnType NullVal = nullptr,
-		typename AtomicTypeWrapper = std::atomic<ReturnType>,
-	typename CacheFillerType = std::function<ReturnType()>&,
-	typename MutexType = std::mutex >
-ReturnType DoubleCheckedLock(AtomicTypeWrapper &wrap, MutexType &mutex, CacheFillerType cache_filler)
+		typename AtomicTypeWrapper = std::atomic <ReturnType>,
+		typename CacheFillerType = std::function < ReturnType()> &,
+		typename MutexType = std::mutex >
+ReturnType
+DoubleCheckedLock(AtomicTypeWrapper &wrap, MutexType &mutex, CacheFillerType cache_filler)
 {
 	ReturnType temp_retval = wrap.load(std::memory_order_relaxed);
-	std::atomic_thread_fence(std::memory_order_acquire);  	// Guaranteed to observe everything done in another thread before
+	std::atomic_thread_fence(std::memory_order_acquire);    // Guaranteed to observe everything done in another thread before
 			 	 	 	 	 	 	 	 	 	 	 	 	// the std::atomic_thread_fence(std::memory_order_release) below.
 	if(temp_retval == NullVal)
 	{
@@ -74,7 +83,7 @@ ReturnType DoubleCheckedLock(AtomicTypeWrapper &wrap, MutexType &mutex, CacheFil
 	return temp_retval;
 }
 
-
+#if 0 // I'm not sure this even works, I don't see anywhere that I actually use it.
 /**
  * Function template implementing a double-checked lock protecting multiple subsets of objects.
  *
@@ -112,5 +121,6 @@ void DoubleCheckedMultiLock(AtomicTypeWrapper &wrap, const BitmaskType bits, Mut
 		}
 	}
 }
+#endif
 
 #endif //GRVSLIB_DOUBLE_CHECKED_LOCK_H
