@@ -32,9 +32,22 @@
  * @param cache_filler
  * @return
  */
-template < typename ReturnType,
-	ReturnType NullVal = nullptr,
-	typename AtomicTypeWrapper = std::atomic<ReturnType>,
+
+/**
+ * Function template implementing a double-checked lock.
+ * A primary use case for this is in the creation of singletons, in their get_instance() function.
+ *
+ * @tparam ReturnType
+ * @tparam NullVal
+ * @tparam AtomicTypeWrapper
+ *
+ * @param wrap          An instance of std::atomic\<ReturnType\>.  This is where the
+ * @param mutex
+ * @param cache_filler
+ */
+template<typename ReturnType,
+		ReturnType NullVal = nullptr,
+		typename AtomicTypeWrapper = std::atomic<ReturnType>,
 	typename CacheFillerType = std::function<ReturnType()>&,
 	typename MutexType = std::mutex >
 ReturnType DoubleCheckedLock(AtomicTypeWrapper &wrap, MutexType &mutex, CacheFillerType cache_filler)

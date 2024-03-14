@@ -29,7 +29,7 @@
 
 TEST(Concurrency, DoubleCheckedLock_Basic)
 {
-	std::shared_mutex go_flag;
+	std::shared_timed_mutex go_flag; // @note: Not shared_mutex so we can compile on C++14 for tests.
 	std::mutex the_mutex;
 	int num_fillers_run {0};
 	constexpr int the_null_value {999};
