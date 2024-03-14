@@ -30,9 +30,10 @@
 TEST(Concurrency, DoubleCheckedLock_Basic)
 {
 	std::shared_mutex go_flag;
-	std::shared_mutex the_mutex;
-	int the_value {0};
-	std::atomic<int> the_atomic_value {999};
+	std::mutex the_mutex;
+	int num_fillers_run {0};
+	constexpr int the_null_value {999};
+	std::atomic<int> the_atomic_value {the_null_value};
 
 	// Stop the threads from running until they'r eboth set up.
 	go_flag.lock();
@@ -41,12 +42,15 @@ TEST(Concurrency, DoubleCheckedLock_Basic)
 		// Wait for the "go" signal.
 		go_flag.lock_shared();
 
-		auto retval = DoubleCheckedLock<int, 999>(the_atomic_value, the_mutex, [&](){
-			the_value += 1;
-			return 1;
+		auto retval = DoubleCheckedLock<int, the_null_value>(the_atomic_value, the_mutex, [&](){
+			num_fillers_run++;
+			return 55;
 		});
 
-//		EXPECT_EQ(3, retval);
+		// Whether this thread had to do the "filling" of th_atomic_value or not, we should have gotten the
+		// correct (non-the_null_value) value either way.
+		EXPECT_EQ(55, retval);
+		EXPECT_EQ(55, the_atomic_value);
 	};
 
 	// Start the test threads.
@@ -61,5 +65,7 @@ TEST(Concurrency, DoubleCheckedLock_Basic)
 	t2.join();
 
 	// Threads are finished, check for problems.
-	EXPECT_EQ(2, the_value);
+	EXPECT_EQ(55, the_atomic_value);
+	// Only one thread should have had to run its "cache filler" function.
+	EXPECT_EQ(1, num_fillers_run);
 }

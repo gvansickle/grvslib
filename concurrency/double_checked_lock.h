@@ -27,7 +27,7 @@
 /**
  * Function template implementing a double-checked lock.
  *
- * @param wrap          An instance of std::atomic<ReturnType>.
+ * @param wrap          An instance of std::atomic\<ReturnType\>.
  * @param mutex
  * @param cache_filler
  * @return
@@ -52,7 +52,7 @@ ReturnType DoubleCheckedLock(AtomicTypeWrapper &wrap, MutexType &mutex, CacheFil
 		{
 			// Still no cached value.  We'll have to do the heavy lifting.
 			//temp_retval = const_cast<ReturnType>(cache_filler());
-			temp_retval = (typename std::remove_const<ReturnType>::type)(cache_filler());
+			temp_retval = (std::remove_const_t<ReturnType>)(cache_filler());
 			std::atomic_thread_fence(std::memory_order_release);
 			wrap.store(temp_retval, std::memory_order_relaxed);
 		}
