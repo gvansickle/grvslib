@@ -57,7 +57,7 @@ public:
 
 			// Clear the update notification flag.
 			m_has_been_updated.clear();
-			// Unblock any threads which may be waiting in set().
+			// Unblock any threads which may be waiting in store_and_set().
 			m_is_being_accessed.clear();
 			m_is_being_accessed.notify_all();
 
