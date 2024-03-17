@@ -50,7 +50,7 @@ class atomic_notifying_parameter
 
 	static constexpr bool is_PayloadType_always_lock_free = PayloadType_is_lock_free();
 
-	using PayloadStorageType = std::conditional_t<is_atomic<PayloadType> && std::is_arithmetic_v<PayloadType>,
+	using PayloadStorageType = std::conditional_t<is_atomic<PayloadType> && std::is_arithmetic<PayloadType>::value,
 	        std::atomic<PayloadType>, PayloadType>;
 
 public:
