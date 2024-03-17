@@ -101,10 +101,10 @@ public:
 		// Wait until the payload lock is false.
 		m_is_being_accessed.wait(true);
 
-		if constexpr(is_PayloadType_always_lock_free)
-		{
+//		if constexpr(is_PayloadType_always_lock_free)
+//		{
 			m_is_being_accessed.test_and_set();
-		}
+//		}
 
 		m_payload = new_writer_payload;
 
