@@ -4,11 +4,12 @@
 #       discovered by gtest_discover_tests() for some reason.
 add_executable(gttests
 	ConcurrencyDoubleCheckedLockTests.cpp
+	ConcurrencyRealtimeTests.cpp
 	EETests.cpp
 	gttests.cpp
 )
 target_link_libraries(gttests
-		PUBLIC
+	PRIVATE
 		grvslib
 		GTest::gtest_main
 )

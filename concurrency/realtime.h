@@ -26,7 +26,7 @@
 
 
 template <typename PayloadType>
-class lock_free_atomic_data_transfer
+class atomic_notifying_parameter
 {
 public:
 
@@ -69,13 +69,17 @@ public:
 		return false;
 	}
 
-	void store_and_set(const PayloadType* new_writer_payload)
+	void store_and_set(const PayloadType& new_writer_payload)
 	{
 		// Wait until the payload lock is false.
 		m_is_being_accessed.wait(true);
-		m_is_being_accessed.test_and_set();
 
-		m_payload = *new_writer_payload;
+		if constexpr(!std::atomic<PayloadType>::is_always_lock_free)
+		{
+			m_is_being_accessed.test_and_set();
+		}
+
+		m_payload = new_writer_payload;
 
 		// Clear the payload lock.
 		m_is_being_accessed.clear();
