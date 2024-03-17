@@ -23,12 +23,38 @@
 #define GRVSLIB_REALTIME_H
 
 #include <atomic>
+#include <type_traits>
 
 
 template <typename PayloadType>
 class atomic_notifying_parameter
 {
+	template<typename T>
+	constexpr static bool is_atomic = false;
+
+	template<typename T>
+	constexpr static bool is_atomic<std::atomic<T>> = true;
+
+	constexpr static bool PayloadType_is_lock_free()
+	{
+		if constexpr (is_atomic<PayloadType>)
+		{
+			return PayloadType::is_always_lock_free;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	static constexpr bool is_PayloadType_always_lock_free = PayloadType_is_lock_free();
+
+	using PayloadStorageType = std::conditional_t<is_atomic<PayloadType> && std::is_arithmetic_v<PayloadType>,
+	        std::atomic<PayloadType>, PayloadType>;
+
 public:
+
+	static constexpr bool is_always_lock_free = is_PayloadType_always_lock_free; /// @todo THIS IS NOT CORRECT YET
 
 	bool load_and_clear_if_set(PayloadType* reader_payload)
 	{
@@ -74,7 +100,7 @@ public:
 		// Wait until the payload lock is false.
 		m_is_being_accessed.wait(true);
 
-		if constexpr(!std::atomic<PayloadType>::is_always_lock_free)
+		if constexpr(is_PayloadType_always_lock_free)
 		{
 			m_is_being_accessed.test_and_set();
 		}
@@ -89,6 +115,7 @@ public:
 		// Set the update notification flag.
 		m_has_been_updated.test_and_set();
 	}
+
 private:
 	/**
 	 * The flag which will communicate whether the payload has be updated or not.
@@ -97,7 +124,7 @@ private:
 	 */
 	std::atomic_flag m_has_been_updated = ATOMIC_FLAG_INIT;
 	std::atomic_flag m_is_being_accessed = ATOMIC_FLAG_INIT;
-	PayloadType m_payload;
+	PayloadStorageType m_payload;
 };
 
 

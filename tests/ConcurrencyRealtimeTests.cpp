@@ -27,6 +27,13 @@ TEST(Concurrency, atomic_notifying_parameter)
 {
 	atomic_notifying_parameter<int> the_parameter;
 
+	EXPECT_EQ(false, the_parameter.is_always_lock_free);
+
 	int new_value {5};
 	the_parameter.store_and_set(new_value);
+
+	int retreived_value {0};
+	the_parameter.load_and_clear_if_set(&retreived_value);
+
+	EXPECT_EQ(5, retreived_value);
 }
