@@ -26,14 +26,15 @@
 #include <type_traits>
 
 
+template<typename T>
+constexpr static bool is_atomic = false;
+
+template<typename T>
+constexpr static bool is_atomic<std::atomic<T>> = true;
+
 template <typename PayloadType>
 class atomic_notifying_parameter
 {
-	template<typename T>
-	constexpr static bool is_atomic = false;
-
-	template<typename T>
-	constexpr static bool is_atomic<std::atomic<T>> = true;
 
 	constexpr static bool PayloadType_is_lock_free()
 	{
