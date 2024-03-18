@@ -21,7 +21,7 @@
 
 #include <gtest/gtest.h>
 
-#include <ee/basic_calculators.h>
+#include <grvslib/ee/basic_calculators.h>
 
 TEST(EE_BasicCalculators, fc1)
 {

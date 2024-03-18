@@ -24,7 +24,7 @@
 #include <shared_mutex>
 
 // Ours
-#include <concurrency/double_checked_lock.h>
+#include <grvslib/concurrency/double_checked_lock.h>
 
 
 TEST(Concurrency, DoubleCheckedLock_Basic)

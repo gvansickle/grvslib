@@ -20,7 +20,7 @@
 // Std C++
 
 // Ours.
-#include <concurrency/realtime.h>
+#include <grvslib/concurrency/realtime.h>
 
 
 TEST(Concurrency, atomic_notifying_parameter)
