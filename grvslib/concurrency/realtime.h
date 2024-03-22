@@ -80,6 +80,9 @@ public:
 			}
 
 			// We've got the m_is_being_accessed lock here.
+			// Note that we don't care here that we have a classic Time-of-check/Time-of-use race, because
+			// we only want the value that was writtem last.  If another thread sneaks in here and (atomically) updates
+			// the value, that's the value we want.
 
 			// Copy the payload out.
 			*reader_payload = m_payload;
