@@ -25,20 +25,21 @@
 #include <atomic>
 #include <type_traits>
 
-
+namespace grvslib::impl
+{
 template<typename T>
 constexpr static bool is_atomic = false;
 
 template<typename T>
 constexpr static bool is_atomic<std::atomic<T>> = true;
+}
 
 template <typename PayloadType>
 class atomic_notifying_parameter
 {
-
 	constexpr static bool PayloadType_is_lock_free()
 	{
-		if constexpr (is_atomic<PayloadType>)
+		if constexpr (grvslib::impl::is_atomic<PayloadType>)
 		{
 			return PayloadType::is_always_lock_free;
 		}
@@ -50,7 +51,8 @@ class atomic_notifying_parameter
 
 	static constexpr bool is_PayloadType_always_lock_free = PayloadType_is_lock_free();
 
-	using PayloadStorageType = std::conditional_t<is_atomic<PayloadType> && std::is_arithmetic<PayloadType>::value,
+	using PayloadStorageType = std::conditional_t<
+			grvslib::impl::is_atomic<PayloadType> && std::is_arithmetic<PayloadType>::value,
 	        std::atomic<PayloadType>, PayloadType>;
 
 public:
