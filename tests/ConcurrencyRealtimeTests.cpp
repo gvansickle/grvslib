@@ -23,11 +23,11 @@
 #include <grvslib/concurrency/realtime.h>
 
 
-TEST(Concurrency, atomic_notifying_parameter)
+TEST(Concurrency, atomic_notifying_parameter_int)
 {
 	atomic_notifying_parameter<int> the_parameter;
 
-	EXPECT_EQ(false, the_parameter.is_always_lock_free);
+	EXPECT_TRUE(the_parameter.is_always_lock_free);
 
 	int new_value {5};
 	the_parameter.store_and_set(new_value);
@@ -37,3 +37,25 @@ TEST(Concurrency, atomic_notifying_parameter)
 
 	EXPECT_EQ(5, retreived_value);
 }
+
+TEST(Concurrency, atomic_notifying_parameter_atomic_int)
+{
+	atomic_notifying_parameter<std::atomic<int>> the_parameter2;
+	EXPECT_TRUE(the_parameter2.is_always_lock_free);
+//	std::atomic<int>
+}
+
+TEST(Concurrency, atomic_notifying_parameter_big_struct)
+{
+	// A struct too big for std:atomic<BigStruct> to be lock-free.
+	struct BigStruct
+	{
+		float m_float;
+		long double m_ld;
+		uint64_t m_uint64;
+	};
+	atomic_notifying_parameter<std::atomic<BigStruct>> the_parameter;
+	EXPECT_FALSE(the_parameter.is_always_lock_free);
+//	std::atomic<int>
+}
+

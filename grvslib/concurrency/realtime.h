@@ -34,6 +34,20 @@ template<typename T>
 constexpr static bool is_atomic<std::atomic<T>> = true;
 }
 
+/**
+ * This class was designed for a fairly specific use case:
+ *
+ * 1. You have one consumer thread which is periodic and has hard or fairly-hard deadlines.  This thread needs to
+ *    periodically pick up some parameter data updated by other threads, but this is not time-critical.
+ * 2. You have one or more producer threads which are updating the parameter data.  These threads do not have any
+ *    particular deadline requirements.
+ * 3. The parameter data may be larger that the integral types.
+ *
+ * A specifc example of this would be a DSP thread which needs to pick up filter coefficients calculated and updated
+ * due to user input by a UI thread.
+ *
+ * @tparam PayloadType
+ */
 template <typename PayloadType>
 class atomic_notifying_parameter
 {
@@ -52,12 +66,16 @@ class atomic_notifying_parameter
 	static constexpr bool is_PayloadType_always_lock_free = PayloadType_is_lock_free();
 
 	using PayloadStorageType = std::conditional_t<
-			grvslib::impl::is_atomic<PayloadType> && std::is_arithmetic<PayloadType>::value,
+			!grvslib::impl::is_atomic<PayloadType> && std::is_arithmetic<PayloadType>::value,
 	        std::atomic<PayloadType>, PayloadType>;
+	static constexpr bool PayloadStorageType_is_atomic = grvslib::impl::is_atomic<PayloadStorageType>;
+	static constexpr bool PayloadStorageType_is_always_lock_free = PayloadStorageType_is_atomic && PayloadStorageType::is_always_lock_free;
 
 public:
 
-	static constexpr bool is_always_lock_free = is_PayloadType_always_lock_free; /// @todo THIS IS NOT CORRECT YET
+	/// If the type of our @a m_payload member (PayloadStorageType) is always lock free, the algorithms of this
+	/// class will be always lock free.
+	static constexpr bool is_always_lock_free = PayloadStorageType_is_always_lock_free;
 
 	bool load_and_clear_if_set(PayloadType* reader_payload)
 	{
@@ -75,7 +93,7 @@ public:
 //			} while(m_is_being_accessed.test_and_set());
 			if(m_is_being_accessed.test_and_set() == true)
 			{
-				// It was locked, skip this attempt and try again on the next call.
+				// It was already locked, skip this read attempt and try again on the next call.
 				return false;
 			}
 
