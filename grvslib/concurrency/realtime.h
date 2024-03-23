@@ -84,7 +84,9 @@ public:
 	static constexpr bool is_always_lock_free = PayloadStorageType_is_always_lock_free;
 
 	/**
-	 * Function the consuming thread should call to atomically check for and load a newly-written value.
+	 * Function the consuming thread should call to atomically check for and load a newly-written value.  Clears the
+	 * notify flag, if set.  If no newly-written data is available (i.e. there hasn't been a call to store_and_set()
+	 * since the last call of this function), does not touch @p reader_payload.
 	 *
 	 * @note This function is lock-free when there is not a newly-written value to load.
 	 *
@@ -128,10 +130,6 @@ public:
 				}
 
 				// We've got the m_is_being_accessed lock here.
-				/// @todo There's no race here.
-				// Note that we don't care that we have a classic Time-of-check/Time-of-use race here, because
-				// we only want the value that was writtem last.  If another thread sneaks in here and (atomically) updates
-				// the value, that's the value we want.
 
 				// Copy the payload out.
 				*reader_payload = m_payload;
