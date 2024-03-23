@@ -54,6 +54,13 @@ TEST(Concurrency, atomic_notifying_parameter_atomic_int)
 
 	EXPECT_TRUE(retval);
 	EXPECT_EQ(5, retreived_value);
+
+	// Second read without intervening write, read should not occur.
+	retreived_value.store(2);
+	retval = the_parameter.load_and_clear_if_set(&retreived_value);
+
+	EXPECT_FALSE(retval);
+	EXPECT_EQ(2, retreived_value);
 }
 
 TEST(Concurrency, atomic_notifying_parameter_big_struct)

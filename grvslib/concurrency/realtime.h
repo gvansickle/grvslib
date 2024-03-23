@@ -42,19 +42,26 @@ constexpr static bool is_atomic<std::atomic<T>> = true;
  * 2. You have one or more producer threads which are updating the parameter data.  These threads do not have any
  *    particular deadline requirements.
  * 3. The parameter data may be larger that the integral types.
+ * 4. The consumer thread in 1 only cares about the last value written by the thread(s) in 2.
  *
  * A specific example of this would be a DSP thread which needs to pick up filter coefficients calculated and updated
  * due to user input by a UI thread.
  *
+ * Note that this class is always lock-free if:
+ * - PayloadType is a std::is_arithmetic type and std::atomic\<PayloadType\> is always-lock-free.
+ * - PayloadType is a std:atomic\<\> type and it is always lock-free.
+ *
+ * Calls to load_and_clear_if_set() are always lock-free when there is not a newly-written value to load.
+ *
  * @tparam PayloadType
  */
-template <typename PayloadType>
+template<typename PayloadType>
 class atomic_notifying_parameter
 {
-	template <typename T>
+	template<typename T>
 	constexpr static bool type_is_atomic_and_always_lock_free()
 	{
-		if constexpr (grvslib::impl::is_atomic<T>)
+		if constexpr(grvslib::impl::is_atomic<T>)
 		{
 			return T::is_always_lock_free;
 		}
@@ -64,11 +71,9 @@ class atomic_notifying_parameter
 		}
 	}
 
-//	static constexpr bool is_PayloadType_always_lock_free = type_is_atomic_and_always_lock_free<PayloadType>();
-
 	using PayloadStorageType = std::conditional_t<
 			!grvslib::impl::is_atomic<PayloadType> && std::is_arithmetic<PayloadType>::value,
-	        std::atomic<PayloadType>, PayloadType>;
+			std::atomic<PayloadType>, PayloadType>;
 	static constexpr bool PayloadStorageType_is_atomic = grvslib::impl::is_atomic<PayloadStorageType>;
 	static constexpr bool PayloadStorageType_is_always_lock_free = type_is_atomic_and_always_lock_free<PayloadStorageType>();
 
@@ -78,7 +83,16 @@ public:
 	/// class will be always lock free.
 	static constexpr bool is_always_lock_free = PayloadStorageType_is_always_lock_free;
 
-	bool load_and_clear_if_set(PayloadType* reader_payload)
+	/**
+	 * Function the consuming thread should call to atomically check for and load a newly-written value.
+	 *
+	 * @note This function is lock-free when there is not a newly-written value to load.
+	 *
+	 * @param reader_payload  Pointer to the variable you want to atomically load the latest data into, if there's
+	 *                        been a write since the last call.
+	 * @return true if there was a newly-stored value to load, false if not.
+	 */
+	bool load_and_clear_if_set(PayloadType *reader_payload)
 	{
 		if(m_has_been_updated.test())
 		{
