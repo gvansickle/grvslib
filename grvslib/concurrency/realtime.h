@@ -83,6 +83,7 @@ public:
 	/// class will be always lock free.
 	static constexpr bool is_always_lock_free = PayloadStorageType_is_always_lock_free;
 
+
 	/**
 	 * Function the consuming thread should call to atomically check for and load a newly-written value.  Clears the
 	 * notify flag, if set.  If no newly-written data is available (i.e. there hasn't been a call to store_and_set()
@@ -149,6 +150,12 @@ public:
 		return false;
 	}
 
+
+	/**
+	 * Function the producing thread(s) should call to store a new parameter value and set the notify flag.
+	 *
+	 * @param new_writer_payload  The new value to write.
+	 */
 	void store_and_set(const PayloadType& new_writer_payload)
 	{
 		if constexpr(PayloadStorageType_is_atomic)
