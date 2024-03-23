@@ -43,7 +43,7 @@ constexpr static bool is_atomic<std::atomic<T>> = true;
  *    particular deadline requirements.
  * 3. The parameter data may be larger that the integral types.
  *
- * A specifc example of this would be a DSP thread which needs to pick up filter coefficients calculated and updated
+ * A specific example of this would be a DSP thread which needs to pick up filter coefficients calculated and updated
  * due to user input by a UI thread.
  *
  * @tparam PayloadType
@@ -51,11 +51,12 @@ constexpr static bool is_atomic<std::atomic<T>> = true;
 template <typename PayloadType>
 class atomic_notifying_parameter
 {
-	constexpr static bool PayloadType_is_lock_free()
+	template <typename T>
+	constexpr static bool type_is_atomic_and_always_lock_free()
 	{
-		if constexpr (grvslib::impl::is_atomic<PayloadType>)
+		if constexpr (grvslib::impl::is_atomic<T>)
 		{
-			return PayloadType::is_always_lock_free;
+			return T::is_always_lock_free;
 		}
 		else
 		{
@@ -63,13 +64,13 @@ class atomic_notifying_parameter
 		}
 	}
 
-	static constexpr bool is_PayloadType_always_lock_free = PayloadType_is_lock_free();
+//	static constexpr bool is_PayloadType_always_lock_free = type_is_atomic_and_always_lock_free<PayloadType>();
 
 	using PayloadStorageType = std::conditional_t<
 			!grvslib::impl::is_atomic<PayloadType> && std::is_arithmetic<PayloadType>::value,
 	        std::atomic<PayloadType>, PayloadType>;
 	static constexpr bool PayloadStorageType_is_atomic = grvslib::impl::is_atomic<PayloadStorageType>;
-	static constexpr bool PayloadStorageType_is_always_lock_free = PayloadStorageType_is_atomic && PayloadStorageType::is_always_lock_free;
+	static constexpr bool PayloadStorageType_is_always_lock_free = type_is_atomic_and_always_lock_free<PayloadStorageType>();
 
 public:
 
@@ -81,35 +82,52 @@ public:
 	{
 		if(m_has_been_updated.test())
 		{
-			// The payload has been updated.  Let's try to read the value.
+			// The payload has been updated.
 
-			// First get the Payload lock using the "test and test-and-set" protocol.
-//			do
-//			{
-//				while(m_is_being_accessed.test())
-//				{
-//					// Spin.
-//				}
-//			} while(m_is_being_accessed.test_and_set());
-			if(m_is_being_accessed.test_and_set() == true)
+			if constexpr(PayloadStorageType_is_atomic)
 			{
-				// It was already locked, skip this read attempt and try again on the next call.
-				return false;
+				// Payload is std::atomic<>.
+
+				// Clear the update notification flag.
+				// Note that we do this before the .load() so we don't lose any notifications.
+				m_has_been_updated.clear();
+
+				// Note that we don't care that we have a race here between the clearing of the "has been updated" flag
+				// and reading the payload, because we always only want the value that was writtem last.
+				// If another thread sneaks in here and (atomically) updates the value, that's the value we want.
+				// We will get a spurious "has been updated" notification, so we'll double-read the same value in this
+				// case.
+
+				// Atomically read the value.  This will be lock-free if PayloadStorageType is lock-free.
+				*reader_payload = m_payload.load();
 			}
+			else
+			{
+				// Payload isn't atomic.
 
-			// We've got the m_is_being_accessed lock here.
-			// Note that we don't care here that we have a classic Time-of-check/Time-of-use race, because
-			// we only want the value that was writtem last.  If another thread sneaks in here and (atomically) updates
-			// the value, that's the value we want.
+				// Let's try to read the value.
 
-			// Copy the payload out.
-			*reader_payload = m_payload;
+				if(m_is_being_accessed.test_and_set() == true)
+				{
+					// It was already locked, skip this read attempt and try again on the next call.
+					return false;
+				}
 
-			// Clear the update notification flag.
-			m_has_been_updated.clear();
-			// Unblock any threads which may be waiting in store_and_set().
-			m_is_being_accessed.clear();
-			m_is_being_accessed.notify_all();
+				// We've got the m_is_being_accessed lock here.
+				/// @todo There's no race here.
+				// Note that we don't care that we have a classic Time-of-check/Time-of-use race here, because
+				// we only want the value that was writtem last.  If another thread sneaks in here and (atomically) updates
+				// the value, that's the value we want.
+
+				// Copy the payload out.
+				*reader_payload = m_payload;
+
+				// Clear the update notification flag.
+				m_has_been_updated.clear();
+				// Unblock any threads which may be waiting in store_and_set().
+				m_is_being_accessed.clear();
+				m_is_being_accessed.notify_all();
+			}
 
 			// Indicate that we did a data transfer.
 			return true;
@@ -121,20 +139,30 @@ public:
 
 	void store_and_set(const PayloadType& new_writer_payload)
 	{
-		// Wait until the payload lock is false.
-		m_is_being_accessed.wait(true);
+		if constexpr(PayloadStorageType_is_atomic)
+		{
+			m_payload.store(new_writer_payload);
+		}
+		else
+		{
+			// Wait until the payload lock is false.
+			// This is not lock-free.
+			m_is_being_accessed.wait(true);
 
-//		if constexpr(is_PayloadType_always_lock_free)
-//		{
-			m_is_being_accessed.test_and_set();
-//		}
+			// Another thread may sneak in here and re-set m_is_being_accessed to true.
+			// So, we spin to eliminate that race.
+			while(m_is_being_accessed.test_and_set() == true){};
 
-		m_payload = new_writer_payload;
+			// We've got the m_is_being_accessed lock here.
 
-		// Clear the payload lock.
-		m_is_being_accessed.clear();
-		// In general, nobody should be waiting for us, but notify just in case.
-		m_is_being_accessed.notify_all();
+			// Copy the new payload.
+			m_payload = new_writer_payload;
+
+			// Clear the payload lock.
+			m_is_being_accessed.clear();
+			// In general, nobody should be waiting for us, but notify just in case.
+			m_is_being_accessed.notify_all();
+		}
 
 		// Set the update notification flag.
 		m_has_been_updated.test_and_set();

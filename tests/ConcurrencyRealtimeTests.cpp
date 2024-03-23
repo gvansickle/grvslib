@@ -40,9 +40,20 @@ TEST(Concurrency, atomic_notifying_parameter_int)
 
 TEST(Concurrency, atomic_notifying_parameter_atomic_int)
 {
-	atomic_notifying_parameter<std::atomic<int>> the_parameter2;
-	EXPECT_TRUE(the_parameter2.is_always_lock_free);
-//	std::atomic<int>
+	atomic_notifying_parameter<std::atomic<int>> the_parameter;
+	EXPECT_TRUE(the_parameter.is_always_lock_free);
+
+	std::atomic<int> retreived_value{0};
+	bool retval = the_parameter.load_and_clear_if_set(&retreived_value);
+	EXPECT_FALSE(retval);
+
+	std::atomic<int> new_value {5};
+	the_parameter.store_and_set(new_value);
+
+	retval = the_parameter.load_and_clear_if_set(&retreived_value);
+
+	EXPECT_TRUE(retval);
+	EXPECT_EQ(5, retreived_value);
 }
 
 TEST(Concurrency, atomic_notifying_parameter_big_struct)
@@ -54,8 +65,11 @@ TEST(Concurrency, atomic_notifying_parameter_big_struct)
 		long double m_ld;
 		uint64_t m_uint64;
 	};
-	atomic_notifying_parameter<std::atomic<BigStruct>> the_parameter;
+	atomic_notifying_parameter<BigStruct> the_parameter;
 	EXPECT_FALSE(the_parameter.is_always_lock_free);
-//	std::atomic<int>
+
+	BigStruct retreived_value{0};
+	bool retval = the_parameter.load_and_clear_if_set(&retreived_value);
+	EXPECT_FALSE(retval);
 }
 
