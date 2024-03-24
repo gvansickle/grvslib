@@ -34,6 +34,9 @@ template<typename T>
 constexpr static bool is_atomic<std::atomic<T>> = true;
 }
 
+// This class needs the additions to std::atomic_flag introduced in C++20.
+#if __cpp_lib_atomic_flag_test >= 201907L
+
 /**
  * This class was designed for a fairly specific use case:
  *
@@ -197,6 +200,6 @@ private:
 	std::atomic_flag m_is_being_accessed = ATOMIC_FLAG_INIT;
 	PayloadStorageType m_payload;
 };
-
+#endif //__cpp_lib_atomic_flag_test >= 201907L
 
 #endif //GRVSLIB_REALTIME_H

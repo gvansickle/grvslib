@@ -25,6 +25,9 @@
 #include <grvslib/concurrency/realtime.h>
 
 
+#if __cpp_lib_atomic_flag_test >= 201907L
+// atomic_notifying_parameter needs C++20 std::atomic_flag.
+
 TEST(Concurrency, atomic_notifying_parameter_int)
 {
 	atomic_notifying_parameter<int> the_parameter;
@@ -128,3 +131,4 @@ TEST(Concurrency, atomic_notifying_parameter_big_struct)
 	}
 }
 
+#endif //__cpp_lib_atomic_flag_test >= 201907L
