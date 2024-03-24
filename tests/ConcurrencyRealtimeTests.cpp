@@ -18,6 +18,8 @@
 #include <gtest/gtest.h>
 
 // Std C++
+#include <chrono>
+#include <thread>
 
 // Ours.
 #include <grvslib/concurrency/realtime.h>
@@ -71,12 +73,58 @@ TEST(Concurrency, atomic_notifying_parameter_big_struct)
 		float m_float;
 		long double m_ld;
 		uint64_t m_uint64;
-	};
-	atomic_notifying_parameter<BigStruct> the_parameter;
-	EXPECT_FALSE(the_parameter.is_always_lock_free);
 
-	BigStruct retreived_value{0};
-	bool retval = the_parameter.load_and_clear_if_set(&retreived_value);
-	EXPECT_FALSE(retval);
+		bool operator==(const BigStruct& other) const
+		{
+			return m_float==other.m_float && m_ld == other.m_ld && m_uint64 == other.m_uint64;
+		}
+	};
+
+	{
+		atomic_notifying_parameter<BigStruct> the_parameter;
+		EXPECT_FALSE(the_parameter.is_always_lock_free);
+
+		BigStruct retreived_value{0};
+		bool retval = the_parameter.load_and_clear_if_set(&retreived_value);
+		EXPECT_FALSE(retval);
+	}
+
+	{
+		////////// Test with two threads.
+		using namespace std::chrono_literals;
+		atomic_notifying_parameter<BigStruct> the_parameter;
+		BigStruct retreived_value;
+		BigStruct sent_value;
+		// Start the test threads.
+		std::thread t1([&]() {
+			while(1)
+			{
+				bool was_set = the_parameter.load_and_clear_if_set(&retreived_value);
+
+				if(was_set)
+				{
+					break;
+				}
+
+				std::this_thread::sleep_for(1000ms);
+			}
+		});
+		std::thread t2([&](){
+			std::this_thread::sleep_for(2000ms);
+
+			sent_value.m_float = 5.0f;
+			sent_value.m_ld = 9876;
+			sent_value.m_uint64 = 5432;
+
+			the_parameter.store_and_set(sent_value);
+		});
+
+		// Wait for the threads to complete.
+		t1.join();
+		t2.join();
+
+		// Threads are finished, check for problems.
+		EXPECT_EQ(sent_value, retreived_value);
+	}
 }
 
