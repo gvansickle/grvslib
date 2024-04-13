@@ -4,7 +4,7 @@ add_subdirectory(concurrency)
 
 add_library(grvslib STATIC)
 target_sources(grvslib
-	PUBLIC
+	PRIVATE
 		linkme.cpp
 )
 target_link_libraries(grvslib
