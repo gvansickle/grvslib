@@ -16,5 +16,4 @@
  * grvslib.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// This exists solely to get the library to link.
-//extern const char* g_linkme; // = "linkme";
+// DO NOT REMOVE.  This empty file exists to get the library to link properly.
