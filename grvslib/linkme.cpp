@@ -17,4 +17,4 @@
  */
 
 // This exists solely to get the library to link.
-const char* g_linkme = "linkme";
+extern const char* g_linkme; // = "linkme";
