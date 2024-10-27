@@ -8,11 +8,11 @@ target_sources(grvslib
 		linkme.cpp
 )
 target_link_libraries(grvslib
-		PRIVATE
+	PRIVATE
 		ee
 		concurrency)
 target_include_directories(grvslib
-		PUBLIC
+	PUBLIC
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/../
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 		$<INSTALL_INTERFACE:grvslib>

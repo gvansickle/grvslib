@@ -1,9 +1,8 @@
 
 add_library(concurrency STATIC EXCLUDE_FROM_ALL)
 target_sources(concurrency
-	PUBLIC
+	PRIVATE
 		realtime.h
 		double_checked_lock.h
-	PRIVATE
 		realtime.cpp
 )
