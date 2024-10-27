@@ -23,7 +23,9 @@
 #ifndef GRVSLIB_BASIC_CALCULATORS_H
 #define GRVSLIB_BASIC_CALCULATORS_H
 
+// Std C++.
 #include <cmath>
+#include <concepts>
 
 /**
  * Calculates the cutoff frequency of an RC section.
@@ -33,8 +35,8 @@
  * @param c   The capacitance, in Farads.
  * @return    The calculated cutoff frequency of the RC filter, in Hz.
  */
-template<typename T>
-constexpr auto fc(T r, T c)
+//template<typename T>
+constexpr std::floating_point auto fc(std::floating_point auto r, std::floating_point auto c)
 {
 	return (1.0 / (2.0 * 3.1415 * r * c));
 }
